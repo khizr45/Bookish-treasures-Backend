@@ -237,7 +237,7 @@ app.post('/auth/User',(req,res)=>{
 app.post('/user/register',(req,res)=>{
     try{
         con.beginTransaction();
-        con.query('insert into user (name,email,password,address,phone_number,username) values (?,?,?,?,?,?)',
+        con.query('insert into user (name,email,password,address,phone_num,username) values (?,?,?,?,?,?)',
         [req.body.Fname,req.body.Email,req.body.Pass,req.body.Address,req.body.Pno,req.body.UN],(error,result)=>{
             if(error) throw error
             con.commit();
@@ -452,6 +452,107 @@ app.post("/get/user/checkout",(req,res)=>{
         return res.status(500).json({message:"some error"})
     }
 })
-app.listen(8000, () => {
+
+app.post('/update/read_flag',(req,res)=>{
+    try{
+        con.query('update messages set read_flag = 1 where sender = ? and receiver = ?',[req.body.send,req.body.recv],(error,result)=>{
+            if(error) throw error
+            return res.status(200).json('successfull')
+        })
+    }
+    catch(error){
+        return res.status(500).json({message:'some error'})
+    }
+})
+
+app.get('/all/senders',(req,res)=>{
+    try{
+        console.log('getting')
+        con.query('select distinct sender from messages',(error,result)=>{
+            if(error) throw error
+            console.log(result)
+            return res.status(200).json(result)
+        })
+    }
+    catch{
+        return res.status(500).json({message:"some error"})
+    }
+})
+
+app.post('/get/message/history',(req,res)=>{
+    try{
+        let name = req.body.user
+        console.log(name)
+        con.query('select * from messages where sender = ? or receiver = ?',[req.body.user,req.body.user],(err,result)=>{
+            if(err) throw err
+            return res.status(200).json(result)
+        })
+    }
+    catch{
+        return res.status(500).json({message:"some error"})
+    }
+})
+
+app.get('/get/unread/messages',(req,res)=>{
+    try{
+        con.query('SELECT sender, COUNT(*) AS unread_messages FROM messages WHERE read_flag = 0 GROUP BY sender',(err,result)=>{
+            if(err) throw err
+            return res.status(200).json(result)
+        })
+    }
+    catch{
+        return res.status(500).json({message:"some error"})
+    }
+})
+const server = app.listen(8000, () => {
     console.log("Listening to 8000");
 })
+
+
+const http = require("http");
+const { Server } = require("socket.io");
+const { Socket } = require("dgram");
+const io = new Server(server, {
+    cors: {
+      origin: "*",
+    },
+  });
+
+
+online_user = {}
+io.on('connection' , (socket)=>{
+
+    socket.on('userOnline',(user)=>{
+        online_user[user] = socket.id
+        console.log(online_user)
+    })
+
+    socket.on('userSendMessage',(message,user,receiver)=>{
+        const receiver_id = online_user[receiver]
+        if(receiver_id){
+            io.to(receiver_id).emit('newMess',message,user,receiver)
+            io.to(receiver_id).emit('ResetUsers',message,user,receiver)
+            console.log(message,user,receiver)
+            if(user === 'admin'){
+                con.query('insert into messages(message,sender,receiver,timestamp,read_flag) values (?,?,?,CURRENT_TIMESTAMP,?)',[message,user,receiver,1],(error,result)=>{
+                    if(error) throw error
+                })
+            }else{
+                con.query('insert into messages(message,sender,receiver,timestamp,read_flag) values (?,?,?,CURRENT_TIMESTAMP,?)',[message,user,receiver,0],(error,result)=>{
+                    if(error) throw error
+                })
+            }
+        }else{
+            con.query('insert into messages(message,sender,receiver,timestamp,read_flag) values (?,?,?,CURRENT_TIMESTAMP,?)',[message,user,receiver,0],(error,result)=>{
+                if(error) throw error
+            })
+        }
+    })
+
+    socket.on('userOffline',(user)=>{
+        delete online_user[user]
+        console.log(online_user)
+    })
+})
+
+module.exports = app;
