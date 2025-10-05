@@ -4,12 +4,12 @@
     "start": "node index.js",
     "test": "jest"
   },
-
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "http": "^0.0.1-security",
     "mysql": "^2.18.1",
+    "mysql2": "^3.15.1",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
