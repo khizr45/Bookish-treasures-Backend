@@ -479,7 +479,7 @@ app.get('/all/senders',(req,res)=>{
             return res.status(200).json(result)
         })
     }
-    catch{
+    catch(error){
         return res.status(500).json({message:"some error"})
     }
 })
@@ -493,7 +493,7 @@ app.post('/get/message/history',(req,res)=>{
             return res.status(200).json(result)
         })
     }
-    catch{
+    catch(error){
         return res.status(500).json({message:"some error"})
     }
 })
@@ -505,7 +505,7 @@ app.get('/get/unread/messages',(req,res)=>{
             return res.status(200).json(result)
         })
     }
-    catch{
+    catch(error){
         return res.status(500).json({message:"some error"})
     }
 })
