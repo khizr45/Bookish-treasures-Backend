@@ -140,7 +140,7 @@ app.post('/Admin/AddBook',(req,res)=>{
     }
     catch(error){
         con.rollback();
-        return req.status(500).json({message:"some error"})
+        return res.status(500).json({message:"some error"})
     }
 })
 
@@ -153,7 +153,7 @@ app.post('/GetBook/Isbn',(req,res)=>{
         })
     }
     catch(error){
-        return req.status(500).json({message:"some error"});
+        return res.status(500).json({message:"some error"});
     }
 })
 
@@ -352,7 +352,7 @@ app.post('/Get/user/orders',(req,res)=>{
         })
     }
     catch(error){
-        return res.status.json({message:"some error"});
+        return res.status(500).json({message:"some error"});
     }
 })
 
